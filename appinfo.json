@@ -1,0 +1,13 @@
+{
+  "id": "com.puzzle-movies",
+  "version": "1.0.1",
+  "vendor": "Puzzle Movies",
+  "type": "web",
+  "main": "index.html",
+  "title": "Puzzle Movies",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1920x1080",
+  "appDescription": "Puzzle Movies web client",
+  "requiredMemory": 64
+}
