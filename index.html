@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1">
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>FlixPlayer</title>
-
   <link rel="stylesheet" href="css/app.css">
 </head>
 
 <body>
-  <main id="scrollArea" tabindex="0">
+  <main id="page">
     <section id="urlScreen">
       <h1>Enter website address</h1>
 
@@ -24,7 +20,6 @@
           autocomplete="off"
           spellcheck="false"
           placeholder="https://puzzle-movies.com/"
-          value="https://puzzle-movies.com/"
           aria-label="Website URL">
 
         <button id="openButton" type="submit">
@@ -39,26 +34,26 @@
         Select the address field and press OK to type.
         Press OK on Open to navigate.
       </p>
+
+      <div class="spacer" aria-hidden="true"></div>
     </section>
   </main>
 
   <script>
     (function () {
-      const scrollArea = document.getElementById('scrollArea');
       const form = document.getElementById('urlForm');
       const input = document.getElementById('urlInput');
-      const openButton = document.getElementById('openButton');
       const error = document.getElementById('error');
 
       const LAST_URL_KEY = 'lastUrl';
-      const SCROLL_STEP = 180;
-
-      let isKeyboardVisible = false;
+      const SCROLL_STEP = 220;
 
       const savedUrl = localStorage.getItem(LAST_URL_KEY);
 
       if (savedUrl) {
         input.value = savedUrl;
+      } else {
+        input.value = 'https://puzzle-movies.com/';
       }
 
       function normalizeUrl(value) {
@@ -95,95 +90,59 @@
 
           localStorage.setItem(LAST_URL_KEY, url);
           window.location.replace(url);
-        } catch (e) {
-          error.textContent = e.message;
+        } catch (err) {
+          error.textContent = err.message;
           input.focus();
         }
       }
 
       function scrollPage(amount) {
-        scrollArea.scrollTop += amount;
+        window.scrollBy(0, amount);
       }
 
       function handleRemoteKey(event) {
+        const code = event.keyCode || event.which;
         const key = event.key;
-        const keyCode = event.keyCode || event.which;
 
-        const isUp =
+        const up =
           key === 'ArrowUp' ||
-          keyCode === 38;
+          code === 38 ||
+          code === 107;
 
-        const isDown =
+        const down =
           key === 'ArrowDown' ||
-          keyCode === 40;
+          code === 40 ||
+          code === 108;
 
-        if (!isUp && !isDown) {
-          return;
+        const wheelUp = code === 402;
+        const wheelDown = code === 403;
+
+        if (up || wheelUp) {
+          event.preventDefault();
+          event.stopPropagation();
+          scrollPage(-SCROLL_STEP);
+          return false;
         }
 
-        /*
-         * Let the virtual keyboard handle navigation while
-         * the URL input is active.
-         */
-        if (
-          document.activeElement === input &&
-          isKeyboardVisible
-        ) {
-          return;
+        if (down || wheelDown) {
+          event.preventDefault();
+          event.stopPropagation();
+          scrollPage(SCROLL_STEP);
+          return false;
         }
 
-        event.preventDefault();
-        event.stopPropagation();
-
-        scrollPage(isUp ? -SCROLL_STEP : SCROLL_STEP);
+        return true;
       }
 
-      function restorePageFocus() {
-        setTimeout(function () {
-          scrollArea.focus();
-        }, 100);
-      }
-
-      window.addEventListener(
-        'keyboardStateChange',
-        function (event) {
-          const detail = event.detail || event;
-
-          isKeyboardVisible =
-            detail.visibility === true ||
-            detail.visibility === 'visible';
-
-          if (!isKeyboardVisible) {
-            restorePageFocus();
-          }
-        }
-      );
-
-      input.addEventListener('focus', function () {
-        isKeyboardVisible = true;
-      });
-
-      input.addEventListener('blur', function () {
-        isKeyboardVisible = false;
-        restorePageFocus();
-      });
+      form.addEventListener('submit', openUrl);
 
       input.addEventListener('input', function () {
         error.textContent = '';
       });
 
-      openButton.addEventListener('focus', function () {
-        scrollArea.scrollIntoView({
-          block: 'nearest',
-          behavior: 'smooth'
-        });
-      });
-
-      form.addEventListener('submit', openUrl);
-
       /*
-       * Capture the remote key before default browser focus
-       * navigation consumes it.
+       * Use both keydown and keyup because older webOS versions
+       * can expose remote events differently.
        */
       document.addEventListener(
         'keydown',
@@ -191,9 +150,11 @@
         true
       );
 
-      window.addEventListener('load', function () {
-        scrollArea.focus();
-      });
+      document.addEventListener(
+        'keyup',
+        handleRemoteKey,
+        true
+      );
     })();
   </script>
 </body>
