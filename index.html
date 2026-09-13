@@ -2,101 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Open website</title>
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1">
 
-  <style>
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
+  <title>FlixPlayer</title>
 
-    body {
-      overflow: hidden;
-    }
-
-    #scrollArea {
-      box-sizing: border-box;
-      width: 100vw;
-      height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 8vh 10vw;
-      outline: none;
-      scroll-behavior: smooth;
-    }
-
-    #urlScreen {
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 1100px;
-      min-height: 84vh;
-      margin: 0 auto;
-      padding-bottom: 10vh;
-    }
-
-    h1 {
-      margin: 0 0 24px;
-      font-size: 36px;
-    }
-
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    #urlInput {
-      box-sizing: border-box;
-      flex: 1 1 600px;
-      min-width: 0;
-      padding: 18px;
-      border: 3px solid #555;
-      border-radius: 8px;
-      background: #222;
-      color: #fff;
-      font-size: 26px;
-    }
-
-    #urlInput:focus {
-      border-color: #4da3ff;
-      outline: none;
-    }
-
-    button {
-      min-height: 68px;
-      padding: 0 28px;
-      border: 0;
-      border-radius: 8px;
-      background: #2878d0;
-      color: #fff;
-      font-size: 26px;
-    }
-
-    button:focus {
-      outline: 4px solid #fff;
-      outline-offset: 3px;
-    }
-
-    #error {
-      min-height: 32px;
-      margin-top: 16px;
-      color: #ff8585;
-      font-size: 22px;
-    }
-
-    .help {
-      margin-top: 48px;
-      color: #aaa;
-      font-size: 22px;
-      line-height: 1.5;
-    }
-  </style>
+  <link rel="stylesheet" href="css/app.css">
 </head>
 
 <body>
@@ -115,14 +27,17 @@
           value="https://puzzle-movies.com/"
           aria-label="Website URL">
 
-        <button id="openButton" type="submit">Open</button>
+        <button id="openButton" type="submit">
+          Open
+        </button>
       </form>
 
       <div id="error" role="alert"></div>
 
       <p class="help">
-        Use the Magic Remote wheel or Up and Down buttons to scroll.
-        Press OK to open the address.
+        Use the Magic Remote wheel or the Up and Down buttons to scroll.
+        Select the address field and press OK to type.
+        Press OK on Open to navigate.
       </p>
     </section>
   </main>
@@ -132,9 +47,13 @@
       const scrollArea = document.getElementById('scrollArea');
       const form = document.getElementById('urlForm');
       const input = document.getElementById('urlInput');
+      const openButton = document.getElementById('openButton');
       const error = document.getElementById('error');
+
       const LAST_URL_KEY = 'lastUrl';
       const SCROLL_STEP = 180;
+
+      let isKeyboardVisible = false;
 
       const savedUrl = localStorage.getItem(LAST_URL_KEY);
 
@@ -155,8 +74,13 @@
 
         const parsed = new URL(url);
 
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-          throw new Error('Only HTTP and HTTPS addresses are supported.');
+        if (
+          parsed.protocol !== 'http:' &&
+          parsed.protocol !== 'https:'
+        ) {
+          throw new Error(
+            'Only HTTP and HTTPS addresses are supported.'
+          );
         }
 
         return parsed.href;
@@ -177,44 +101,98 @@
         }
       }
 
-      function handleRemoteScroll(event) {
-        const key = event.key;
-        const keyCode = event.keyCode;
+      function scrollPage(amount) {
+        scrollArea.scrollTop += amount;
+      }
 
-        const isUp = key === 'ArrowUp' || keyCode === 38;
-        const isDown = key === 'ArrowDown' || keyCode === 40;
+      function handleRemoteKey(event) {
+        const key = event.key;
+        const keyCode = event.keyCode || event.which;
+
+        const isUp =
+          key === 'ArrowUp' ||
+          keyCode === 38;
+
+        const isDown =
+          key === 'ArrowDown' ||
+          keyCode === 40;
 
         if (!isUp && !isDown) {
           return;
         }
 
-        const activeElement = document.activeElement;
-
-        // Allow the URL input to handle its own cursor movement.
-        if (activeElement === input && !event.ctrlKey && !event.altKey) {
+        /*
+         * Let the virtual keyboard handle navigation while
+         * the URL input is active.
+         */
+        if (
+          document.activeElement === input &&
+          isKeyboardVisible
+        ) {
           return;
         }
 
         event.preventDefault();
+        event.stopPropagation();
 
-        scrollArea.scrollBy({
-          top: isUp ? -SCROLL_STEP : SCROLL_STEP,
-          left: 0,
-          behavior: 'smooth'
-        });
+        scrollPage(isUp ? -SCROLL_STEP : SCROLL_STEP);
       }
 
-      form.addEventListener('submit', openUrl);
+      function restorePageFocus() {
+        setTimeout(function () {
+          scrollArea.focus();
+        }, 100);
+      }
+
+      window.addEventListener(
+        'keyboardStateChange',
+        function (event) {
+          const detail = event.detail || event;
+
+          isKeyboardVisible =
+            detail.visibility === true ||
+            detail.visibility === 'visible';
+
+          if (!isKeyboardVisible) {
+            restorePageFocus();
+          }
+        }
+      );
+
+      input.addEventListener('focus', function () {
+        isKeyboardVisible = true;
+      });
+
+      input.addEventListener('blur', function () {
+        isKeyboardVisible = false;
+        restorePageFocus();
+      });
 
       input.addEventListener('input', function () {
         error.textContent = '';
       });
 
-      document.addEventListener('keydown', handleRemoteScroll);
+      openButton.addEventListener('focus', function () {
+        scrollArea.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        });
+      });
+
+      form.addEventListener('submit', openUrl);
+
+      /*
+       * Capture the remote key before default browser focus
+       * navigation consumes it.
+       */
+      document.addEventListener(
+        'keydown',
+        handleRemoteKey,
+        true
+      );
 
       window.addEventListener('load', function () {
-        input.focus();
-        input.select();
+        scrollArea.focus();
       });
     })();
   </script>
