@@ -1,48 +1,60 @@
 # flixplayer
 FlixPlayer is a simple app for LG webOS TVs to launch a website full-screen from the menu
 
-Build and install
+**Build and install**
+
 LG’s official webOS workflow is to create an app, package it into an .ipk, install it, and launch it. The current webOS Studio documentation recommends the webOS CLI and the Developer Mode app.
 
-Install the CLI:
+*Install the CLI:*
 
-bash
+```bash
 npm install -g @webos-tools/cli
+```
 Package the project:
 
-bash
+```bash
 ares-package .
+```
 This produces an .ipk file.
+
 
 Enable Developer Mode on the TV:
 
-Install Developer Mode from the LG Content Store.
+1. Install Developer Mode from the LG Content Store.
 
-Sign in with an LG developer account.
+2. Sign in with an LG developer account.
 
-Turn on Dev Mode Status.
+3. Turn on Dev Mode Status.
 
-Enable Key Server if requested.
+4. Enable Key Server if requested.
 
-Note the TV IP address and passphrase.
+5. Note the TV IP address and passphrase.
 
-Register the TV:
+Install the latest [Device/DevMode Manager for webOS TV] (https://github.com/webosbrew/dev-manager-desktop/releases) and install the ipk from there
 
-bash
+or
+
+Register the LG TV and upload from CLI:
+
+```bash
 ares-setup-device --add tv \
-  -i "username=prisoner" \
+  -i "username=<name>" \
   -i "host=TV_IP_ADDRESS" \
   -i "port=9922"
+```
 Retrieve the key:
 
-bash
+```bash
 ares-novacom --device tv --getkey
+```
 Enter the passphrase shown on the TV, then install the package:
 
-bash
-ares-install --device tv ./ru.shipov.puzzlemovies_1.0.0_all.ipk
+```bash
+ares-install --device tv ./com.flixplayer_<version>_all.ipk
+```
 Launch it:
 
-bash
-ares-launch --device tv ru.shipov.puzzlemovies
+```bash
+ares-launch --device tv com.flixplayer
+```
 The same Developer Mode and .ipk installation process is used by other webOS applications, and webOS 5.x is within the supported compatibility range for ordinary web apps.
