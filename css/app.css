@@ -1,0 +1,99 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: #111;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  overflow: hidden;
+}
+
+#scrollArea {
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8vh 10vw;
+  outline: none;
+  scroll-behavior: smooth;
+}
+
+#scrollArea:focus {
+  outline: none;
+}
+
+#scrollArea:focus-visible {
+  outline: 3px solid #4da3ff;
+  outline-offset: -3px;
+}
+
+#urlScreen {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1100px;
+  min-height: 84vh;
+  margin: 0 auto;
+  padding-bottom: 10vh;
+}
+
+h1 {
+  margin: 0 0 24px;
+  font-size: 36px;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+#urlInput {
+  box-sizing: border-box;
+  flex: 1 1 600px;
+  min-width: 0;
+  padding: 18px;
+  border: 3px solid #555;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  font-size: 26px;
+}
+
+#urlInput:focus {
+  border-color: #4da3ff;
+  outline: none;
+}
+
+button {
+  min-height: 68px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 8px;
+  background: #2878d0;
+  color: #fff;
+  font-size: 26px;
+}
+
+button:focus {
+  outline: 4px solid #fff;
+  outline-offset: 3px;
+}
+
+#error {
+  min-height: 32px;
+  margin-top: 16px;
+  color: #ff8585;
+  font-size: 22px;
+}
+
+.help {
+  margin-top: 48px;
+  color: #aaa;
+  font-size: 22px;
+  line-height: 1.5;
+}
