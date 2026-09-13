@@ -1,7 +1,7 @@
 # flixplayer
 FlixPlayer is a simple app for LG webOS TVs to launch a website full-screen from the menu.
 
-LG’s official webOS workflow is to create an app, package it into an .ipk, install it, and launch it. The current webOS Studio documentation recommends the webOS CLI and the Developer Mode app.
+LG’s official webOS workflow is to create an app, package it into an .ipk, install it, and launch it. 
 
 **Build from source**
 
