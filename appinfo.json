@@ -1,7 +1,7 @@
 {
   "id": "com.flixplayer",
-  "version": "0.1.1",
-  "vendor": "Puzzle Movies",
+  "version": "0.2.0",
+  "vendor": "FlixPlayer",
   "type": "web",
   "main": "index.html",
   "title": "FlixPlayer",
