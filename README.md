@@ -1,10 +1,9 @@
 # flixplayer
-FlixPlayer is a simple app for LG webOS TVs to launch a website full-screen from the menu
-
-
-**Build from source**
+FlixPlayer is a simple app for LG webOS TVs to launch a website full-screen from the menu.
 
 LG’s official webOS workflow is to create an app, package it into an .ipk, install it, and launch it. The current webOS Studio documentation recommends the webOS CLI and the Developer Mode app.
+
+**Build from source**
 
 *Install the CLI:*
 
@@ -17,6 +16,8 @@ Package the project:
 ares-package .
 ```
 This produces an .ipk file.
+
+Or, simply download the [latest FlixPlayer .ipk binary] (https://github.com/alexxic/flixplayer/releases/latest).
 
 
 **Install .ipk**
@@ -33,33 +34,14 @@ Enable Developer Mode on the TV:
 
 5. Note the TV IP address and passphrase.
 
-Install the latest [Device/DevMode Manager for webOS TV] (https://github.com/webosbrew/dev-manager-desktop/releases), connect and install the ipk from there
+Install the latest [Device/DevMode Manager for webOS TV] (https://github.com/webosbrew/dev-manager-desktop/releases).
 
-or
+Connect webOS DevManager to the LG TV.
 
-Register the LG TV and upload from CLI:
+Install the ipk.
 
-```bash
-ares-setup-device --add tv \
-  -i "username=<name>" \
-  -i "host=TV_IP_ADDRESS" \
-  -i "port=9922"
-```
-Retrieve the key:
 
-```bash
-ares-novacom --device tv --getkey
-```
-Enter the passphrase shown on the TV, then install the package:
-
-```bash
-ares-install --device tv ./com.flixplayer_<version>_all.ipk
-```
-Launch it:
-
-```bash
-ares-launch --device tv com.flixplayer
-```
+<img width="2152" height="1544" alt="image" src="https://github.com/user-attachments/assets/f0fb748a-d232-4ebc-9bb3-ee9afa5067e0" />
 
 **Enjoy FlixPlayer**
 
