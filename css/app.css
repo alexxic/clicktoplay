@@ -4,6 +4,7 @@ html {
 }
 
 body {
+  width: 100%;
   min-width: 100%;
   min-height: 100vh;
   margin: 0;
@@ -85,6 +86,6 @@ button:focus {
   line-height: 1.5;
 }
 
-.spacer {
+.bottom-space {
   height: 120vh;
 }
