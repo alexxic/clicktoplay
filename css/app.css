@@ -89,3 +89,17 @@ button:focus {
 .bottom-space {
   height: 120vh;
 }
+
+#buildVersion {
+  position: fixed;
+  right: 28px;
+  bottom: 22px;
+  z-index: 1000;
+  padding: 8px 12px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #999;
+  font-size: 18px;
+  line-height: 1;
+  pointer-events: none;
+}
