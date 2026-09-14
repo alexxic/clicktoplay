@@ -8,6 +8,8 @@
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
   "resolution": "1920x1080",
-  "appDescription": "FlixPlayer webOS app",
-  "requiredMemory": 64
+  "requiredMemory": 64,
+  "accessories": [
+    "com.webos.app.browser"
+  ]
 }
