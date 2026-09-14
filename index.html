@@ -42,6 +42,12 @@
     </section>
   </main>
 
+  <div
+    id="buildVersion"
+    aria-label="Build version">
+    Build __BUILD_VERSION__
+  </div>
+
   <script>
     (function () {
       var form = document.getElementById('urlForm');
@@ -143,10 +149,6 @@
 
         event.preventDefault();
 
-        /*
-         * Some older webOS builds report a very small wheel delta.
-         * Normalize it into a useful TV scrolling distance.
-         */
         if (delta > 0) {
           scrollByAmount(Math.max(SCROLL_STEP, delta));
         } else {
@@ -160,19 +162,12 @@
         error.textContent = '';
       });
 
-      /*
-       * LG documents Up and Down as key codes 38 and 40.
-       */
       document.addEventListener(
         'keydown',
         handleArrowKey,
         false
       );
 
-      /*
-       * Support modern and older wheel event names used by
-       * webOS browser engines.
-       */
       document.addEventListener(
         'wheel',
         handleWheel,
