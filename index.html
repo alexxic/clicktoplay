@@ -35,7 +35,7 @@
 
       <p class="help">
         Enter a website address and press Open.
-        The website will load directly in the TV app.
+        The address will open in the LG web browser.
       </p>
     </section>
   </main>
@@ -87,7 +87,7 @@
         return parsed.href;
       }
 
-      function openUrl(event) {
+      function openInBrowser(event) {
         event.preventDefault();
         error.textContent = '';
 
@@ -97,18 +97,47 @@
           localStorage.setItem(LAST_URL_KEY, url);
 
           /*
-           * Direct navigation avoids iframe restrictions.
-           * The destination site controls its own scrolling,
-           * fullscreen behavior, login, and video player.
+           * Launch LG's built-in web browser.
+           * This avoids the packaged-app webview scrolling issue.
            */
-          window.location.replace(url);
+          if (
+            window.webOS &&
+            typeof window.webOS.service === 'function'
+          ) {
+            window.webOS.service.request(
+              'luna://com.webos.applicationManager',
+              {
+                method: 'launch',
+                parameters: {
+                  id: 'com.webos.app.browser',
+                  params: {
+                    target: url
+                  }
+                },
+                onSuccess: function () {
+                  console.log('Browser launched');
+                },
+                onFailure: function (response) {
+                  error.textContent =
+                    'Could not open the LG browser.';
+                  console.log(response);
+                }
+              }
+            );
+          } else {
+            /*
+             * Fallback for environments where the webOS API
+             * is unavailable.
+             */
+            window.location.href = url;
+          }
         } catch (err) {
           error.textContent = err.message;
           input.focus();
         }
       }
 
-      form.addEventListener('submit', openUrl);
+      form.addEventListener('submit', openInBrowser);
 
       input.addEventListener('input', function () {
         error.textContent = '';
