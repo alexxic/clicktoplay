@@ -19,111 +19,269 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: flixplayer-release
+  cancel-in-progress: false
+
 jobs:
   prepare-version:
-    name: Update version files
+    name: Update and commit version
     runs-on: ubuntu-22.04
 
-    # Do not run the version-commit job for the bot's own version commit.
     if: github.actor != 'github-actions[bot]'
 
     outputs:
       version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
       branch: ${{ steps.target.outputs.branch }}
 
     steps:
-      - name: Checkout target branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
           persist-credentials: true
 
-      - name: Determine version
+      - name: Determine release version
         id: version
         shell: bash
         run: |
+          set -euo pipefail
+
           if [[ "${{ github.event_name }}" == "release" ]]; then
-            VERSION="${{ github.event.release.tag_name }}"
+            TAG="${{ github.event.release.tag_name }}"
           elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION="${{ github.ref_name }}"
+            TAG="${{ github.ref_name }}"
           else
-            VERSION="${{ inputs.version }}"
+            TAG="${{ inputs.version }}"
           fi
 
-          VERSION="${VERSION#v}"
+          VERSION="${TAG#v}"
 
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
             echo "Invalid version: $VERSION"
             exit 1
           fi
 
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Using version: $VERSION"
+
+          echo "Release tag: $TAG"
+          echo "Application version: $VERSION"
 
       - name: Determine target branch
         id: target
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            TARGET_BRANCH="${{ github.event.release.target_commitish }}"
-          else
-            TARGET_BRANCH="main"
-          fi
+          set -euo pipefail
 
-          if [[ -z "$TARGET_BRANCH" ]]; then
-            TARGET_BRANCH="main"
+          TARGET_BRANCH="main"
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            RELEASE_BRANCH="${{ github.event.release.target_commitish }}"
+
+            if [[ -n "$RELEASE_BRANCH" ]]; then
+              TARGET_BRANCH="$RELEASE_BRANCH"
+            fi
           fi
 
           echo "branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Target branch: $TARGET_BRANCH"
 
-      - name: Update version files
+      - name: Update appinfo.json and package.json
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
+
           node <<'NODE'
           const fs = require('fs');
 
           const version = process.env.VERSION;
 
-          const appInfo = JSON.parse(
-            fs.readFileSync('appinfo.json', 'utf8')
-          );
+          for (const filename of ['appinfo.json', 'package.json']) {
+            if (!fs.existsSync(filename)) {
+              throw new Error(`${filename} was not found`);
+            }
 
-          appInfo.version = version;
+            const data = JSON.parse(
+              fs.readFileSync(filename, 'utf8')
+            );
 
-          fs.writeFileSync(
-            'appinfo.json',
-            JSON.stringify(appInfo, null, 2) + '\n'
-          );
+            data.version = version;
 
-          const packageJson = JSON.parse(
-            fs.readFileSync('package.json', 'utf8')
-          );
-
-          packageJson.version = version;
-
-          fs.writeFileSync(
-            'package.json',
-            JSON.stringify(packageJson, null, 2) + '\n'
-          );
+            fs.writeFileSync(
+              filename,
+              JSON.stringify(data, null, 2) + '\n'
+            );
+          }
           NODE
 
+      - name: Verify version files
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          APP_VERSION="$(node -p "require('./appinfo.json').version")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          test "$APP_VERSION" = "$VERSION"
+          test "$PACKAGE_VERSION" = "$VERSION"
+
+          echo "appinfo.json version: $APP_VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+
       - name: Commit version files
-        shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
           TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+        shell: bash
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add appinfo.json package.json
 
           if git diff --cached --quiet; then
-            echo "No version changes to commit."
+            echo "Version files already contain $VERSION"
             exit 0
           fi
 
-          git commit -m "chore: set version to ${VERSION}"
+          git commit \
+            -m "chore: set version to ${VERSION}"
+
           git push origin "HEAD:${TARGET_BRANCH}"
+
+  build:
+    name: Build LG webOS IPK
+    needs: prepare-version
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout updated source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install webOS CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm install --global @webos-tools/cli
+          echo "$(npm prefix --global)/bin" >> "$GITHUB_PATH"
+
+      - name: Verify webOS CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          command -v ares
+          command -v ares-package
+
+          ares --version
+          ares-package --version
+
+      - name: Validate project files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f appinfo.json
+          test -f package.json
+          test -f index.html
+          test -f css/app.css
+
+      - name: Verify committed version
+        env:
+          VERSION: ${{ needs.prepare-version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          APP_VERSION="$(node -p "require('./appinfo.json').version")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          test "$APP_VERSION" = "$VERSION"
+          test "$PACKAGE_VERSION" = "$VERSION"
+
+          echo "Build version: $VERSION"
+
+      - name: Inject build version into index.html
+        env:
+          VERSION: ${{ needs.prepare-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path("index.html")
+          content = path.read_text(encoding="utf-8")
+          version = os.environ["VERSION"]
+          placeholder = "__BUILD_VERSION__"
+
+          if placeholder not in content:
+              raise SystemExit(
+                  "Placeholder __BUILD_VERSION__ was not found "
+                  "in index.html"
+              )
+
+          content = content.replace(placeholder, version)
+          path.write_text(content, encoding="utf-8")
+          PY
+
+      - name: Verify injected build version
+        env:
+          VERSION: ${{ needs.prepare-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          grep -n "Build ${VERSION}" index.html
+
+          if grep -q "__BUILD_VERSION__" index.html; then
+            echo "Placeholder was not fully replaced"
+            exit 1
+          fi
+
+      - name: Build IPK
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf build
+          mkdir -p build
+
+          ares-package . --outdir build
+
+      - name: Show generated package
+        run: ls -lah build
+
+      - name: Upload IPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flixplayer-ipk-${{ needs.prepare-version.outputs.version }}
+          path: build/*.ipk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach IPK to GitHub release
+        if: github.event_name == 'release' || github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-version.outputs.tag }}
+          files: build/*.ipk
+          fail_on_unmatched_files: true
