@@ -1,25 +1,22 @@
-html {
-  min-height: 100%;
-  background: #111;
-}
-
+html,
 body {
   width: 100%;
-  min-width: 100%;
-  min-height: 100vh;
+  height: 100%;
   margin: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
   background: #111;
   color: #fff;
   font-family: Arial, sans-serif;
 }
 
+body {
+  overflow: hidden;
+}
+
 #page {
   box-sizing: border-box;
-  width: 100%;
-  min-height: 220vh;
-  padding: 8vh 10vw 100vh;
+  width: 100vw;
+  height: 100vh;
+  padding: 8vh 10vw;
 }
 
 #urlScreen {
@@ -84,10 +81,6 @@ button:focus {
   color: #aaa;
   font-size: 22px;
   line-height: 1.5;
-}
-
-.bottom-space {
-  height: 120vh;
 }
 
 #buildVersion {
