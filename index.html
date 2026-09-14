@@ -34,17 +34,16 @@
       <div id="error" role="alert"></div>
 
       <p class="help">
-        Enter a website address and press Open.
-        The address will open in the LG web browser.
+        Press OK to open the website in the LG browser.
       </p>
     </section>
   </main>
 
-  <div
-    id="buildVersion"
-    aria-label="Build version">
+  <div id="buildVersion">
     Build __BUILD_VERSION__
   </div>
+
+  <script src="js/webOSTV.js"></script>
 
   <script>
     (function () {
@@ -56,11 +55,7 @@
 
       var savedUrl = localStorage.getItem(LAST_URL_KEY);
 
-      if (savedUrl) {
-        input.value = savedUrl;
-      } else {
-        input.value = 'https://puzzle-movies.com/';
-      }
+      input.value = savedUrl || 'https://puzzle-movies.com/';
 
       function normalizeUrl(value) {
         var url = value.trim();
@@ -87,7 +82,7 @@
         return parsed.href;
       }
 
-      function openInBrowser(event) {
+      function openUrl(event) {
         event.preventDefault();
         error.textContent = '';
 
@@ -96,48 +91,47 @@
 
           localStorage.setItem(LAST_URL_KEY, url);
 
-          /*
-           * Launch LG's built-in web browser.
-           * This avoids the packaged-app webview scrolling issue.
-           */
           if (
-            window.webOS &&
-            typeof window.webOS.service === 'function'
+            !window.webOS ||
+            !window.webOS.service ||
+            typeof window.webOS.service.request !== 'function'
           ) {
-            window.webOS.service.request(
-              'luna://com.webos.applicationManager',
-              {
-                method: 'launch',
-                parameters: {
-                  id: 'com.webos.app.browser',
-                  params: {
-                    target: url
-                  }
-                },
-                onSuccess: function () {
-                  console.log('Browser launched');
-                },
-                onFailure: function (response) {
-                  error.textContent =
-                    'Could not open the LG browser.';
-                  console.log(response);
-                }
-              }
+            throw new Error(
+              'webOS service API is not available.'
             );
-          } else {
-            /*
-             * Fallback for environments where the webOS API
-             * is unavailable.
-             */
-            window.location.href = url;
           }
+
+          window.webOS.service.request(
+            'luna://com.webos.applicationManager',
+            {
+              method: 'launch',
+              parameters: {
+                id: 'com.webos.app.browser',
+                params: {
+                  target: url
+                }
+              },
+              onSuccess: function () {
+                console.log('Browser launched');
+              },
+              onFailure: function (response) {
+                console.log(
+                  'Launch failed:',
+                  JSON.stringify(response)
+                );
+
+                error.textContent =
+                  'Could not launch the LG browser.';
+              }
+            }
+          );
         } catch (err) {
           error.textContent = err.message;
           input.focus();
         }
       }
 
-      form.addEventListener('submit', openInBrowser);
+      form.addEventListener('submit', openUrl);
 
       input.addEventListener('input', function () {
         error.textContent = '';
