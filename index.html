@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1">
+
   <title>FlixPlayer</title>
+
   <link rel="stylesheet" href="css/app.css">
 </head>
 
@@ -30,25 +34,24 @@
       <div id="error" role="alert"></div>
 
       <p class="help">
-        Use the Magic Remote wheel or the Up and Down buttons to scroll.
-        Select the address field and press OK to type.
-        Press OK on Open to navigate.
+        Move the Magic Remote pointer over the page and rotate the wheel
+        to scroll. Use Up and Down in five-way mode.
       </p>
 
-      <div class="spacer" aria-hidden="true"></div>
+      <div class="bottom-space" aria-hidden="true"></div>
     </section>
   </main>
 
   <script>
     (function () {
-      const form = document.getElementById('urlForm');
-      const input = document.getElementById('urlInput');
-      const error = document.getElementById('error');
+      var form = document.getElementById('urlForm');
+      var input = document.getElementById('urlInput');
+      var error = document.getElementById('error');
 
-      const LAST_URL_KEY = 'lastUrl';
-      const SCROLL_STEP = 220;
+      var LAST_URL_KEY = 'lastUrl';
+      var SCROLL_STEP = 180;
 
-      const savedUrl = localStorage.getItem(LAST_URL_KEY);
+      var savedUrl = localStorage.getItem(LAST_URL_KEY);
 
       if (savedUrl) {
         input.value = savedUrl;
@@ -57,7 +60,7 @@
       }
 
       function normalizeUrl(value) {
-        let url = value.trim();
+        var url = value.trim();
 
         if (!url) {
           throw new Error('Enter a website address.');
@@ -67,7 +70,7 @@
           url = 'https://' + url;
         }
 
-        const parsed = new URL(url);
+        var parsed = new URL(url);
 
         if (
           parsed.protocol !== 'http:' &&
@@ -86,7 +89,7 @@
         error.textContent = '';
 
         try {
-          const url = normalizeUrl(input.value);
+          var url = normalizeUrl(input.value);
 
           localStorage.setItem(LAST_URL_KEY, url);
           window.location.replace(url);
@@ -96,42 +99,59 @@
         }
       }
 
-      function scrollPage(amount) {
+      function scrollByAmount(amount) {
         window.scrollBy(0, amount);
       }
 
-      function handleRemoteKey(event) {
-        const code = event.keyCode || event.which;
-        const key = event.key;
+      function handleArrowKey(event) {
+        var code = event.keyCode || event.which;
+        var key = event.key;
 
-        const up =
+        var isUp =
           key === 'ArrowUp' ||
-          code === 38 ||
-          code === 107;
+          code === 38;
 
-        const down =
+        var isDown =
           key === 'ArrowDown' ||
-          code === 40 ||
-          code === 108;
+          code === 40;
 
-        const wheelUp = code === 402;
-        const wheelDown = code === 403;
-
-        if (up || wheelUp) {
+        if (isUp) {
           event.preventDefault();
-          event.stopPropagation();
-          scrollPage(-SCROLL_STEP);
-          return false;
+          scrollByAmount(-SCROLL_STEP);
         }
 
-        if (down || wheelDown) {
+        if (isDown) {
           event.preventDefault();
-          event.stopPropagation();
-          scrollPage(SCROLL_STEP);
-          return false;
+          scrollByAmount(SCROLL_STEP);
+        }
+      }
+
+      function handleWheel(event) {
+        var delta = 0;
+
+        if (typeof event.deltaY === 'number') {
+          delta = event.deltaY;
+        } else if (typeof event.wheelDelta === 'number') {
+          delta = -event.wheelDelta;
+        } else if (typeof event.detail === 'number') {
+          delta = event.detail * 40;
         }
 
-        return true;
+        if (!delta) {
+          return;
+        }
+
+        event.preventDefault();
+
+        /*
+         * Some older webOS builds report a very small wheel delta.
+         * Normalize it into a useful TV scrolling distance.
+         */
+        if (delta > 0) {
+          scrollByAmount(Math.max(SCROLL_STEP, delta));
+        } else {
+          scrollByAmount(Math.min(-SCROLL_STEP, delta));
+        }
       }
 
       form.addEventListener('submit', openUrl);
@@ -141,19 +161,34 @@
       });
 
       /*
-       * Use both keydown and keyup because older webOS versions
-       * can expose remote events differently.
+       * LG documents Up and Down as key codes 38 and 40.
        */
       document.addEventListener(
         'keydown',
-        handleRemoteKey,
-        true
+        handleArrowKey,
+        false
+      );
+
+      /*
+       * Support modern and older wheel event names used by
+       * webOS browser engines.
+       */
+      document.addEventListener(
+        'wheel',
+        handleWheel,
+        { passive: false }
       );
 
       document.addEventListener(
-        'keyup',
-        handleRemoteKey,
-        true
+        'mousewheel',
+        handleWheel,
+        false
+      );
+
+      document.addEventListener(
+        'DOMMouseScroll',
+        handleWheel,
+        false
       );
     })();
   </script>
