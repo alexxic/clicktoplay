@@ -1,6 +1,6 @@
 {
   "id": "com.flixplayer",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "vendor": "FlixPlayer",
   "type": "web",
   "main": "index.html",
