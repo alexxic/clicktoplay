@@ -1,0 +1,9 @@
+# Replace all the occurrences of 'FlixPlayer' with 'LinkOpener' in all files
+- name: Find and replace
+  uses: richardrigutins/replace-in-files@v2
+  with:
+    files: '*'
+    search-text: 'FlixPlayer'
+    replacement-text: 'LinkOpener'
+    encoding: 'utf8'
+    max-parallelism: 10
