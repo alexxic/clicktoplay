@@ -1,9 +1,9 @@
-# Replace all the occurrences of 'FlixPlayer' with 'LinkOpener' in all files
+# Replace all the occurrences of 'ClickToPlay' with 'LinkOpener' in all files
 - name: Replace in files
   uses: richardrigutins/replace-in-files@v3.1.2
   with:
     files: '*'
-    search-text: 'FlixPlayer'
+    search-text: 'ClickToPlay'
     replacement-text: 'LinkOpener'
     encoding: 'utf8'
     max-parallelism: 10

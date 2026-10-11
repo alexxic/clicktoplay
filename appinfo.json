@@ -1,10 +1,10 @@
 {
-  "id": "com.flixplayer",
+  "id": "com.clicktoplay",
   "version": "0.1.1",
-  "vendor": "FlixPlayer",
+  "vendor": "ClickToPlay",
   "type": "web",
   "main": "index.html",
-  "title": "FlixPlayer",
+  "title": "ClickToPlay",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
   "resolution": "1920x1080",
