@@ -1,4 +1,4 @@
-# clicktoplay
+# ClickToPlay
 ClickToPlay is a simple app for LG webOS TVs to launch a website full-screen from the app menu.
 
 ## ⚠️ Disclaimer
@@ -15,12 +15,12 @@ LG’s official webOS workflow is to create an app, package it into an .ipk, ins
 
 ## 🛠️ Build from Source
 
-### 1. Install the CLI
+1. Install the CLI
 
 ```bash
 npm install -g @webos-tools/cli
 ```
-### 2. Package the Project
+2. Package the Project
 
 ```bash
 ares-package .
@@ -30,9 +30,9 @@ This produces an .ipk file.
 Or, simply download the [latest ClickToPlay .ipk binary] (https://github.com/alexxic/clicktoplay/releases/latest).
 
 
-**Install .ipk**
+## Install .ipk
 
-Enable Developer Mode on the TV:
+** Enable Developer Mode on the TV: **
 
 1. Install Developer Mode from the LG Content Store.
 
@@ -44,7 +44,7 @@ Enable Developer Mode on the TV:
 
 5. Note the TV IP address and passphrase.
 
-### 2. Deploy using DevMode Manager
+** Deploy using DevMode Manager **
 
 1. Install the latest [Device/DevMode Manager for webOS TV] (https://github.com/webosbrew/dev-manager-desktop/releases).
 
